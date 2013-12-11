@@ -31,7 +31,6 @@ def fourier_genome(seq):
     xhatT=abs(fft(xT))
     xhatC=abs(fft(xC))
     xhat=[(xhatA[i]**2+xhatT[i]**2+xhatC[i]**2+xhatG[i]**2)*2/len(seq) for i in range(len(xhatA)/2,len(xhatA))]
-    #xhat=[(xhatA[i])*2/len(seq) for i in range(len(xhatA)/2,len(xhatA))]
     return xhat,[float(i)/len(xhat) for i in range(0,len(xhat))]
 def P(spectrum):
     x=len(spectrum)
