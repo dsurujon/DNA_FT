@@ -54,7 +54,8 @@ def main(inputfile, outputdir):
         plt.title("Fourier Transform of %s" % record.id)
         plt.xlabel("frequency")
         plt.ylabel("S")
-        plt.text(0.75,15,"P=%.2f"%p)
+        y_text = max(ff_p)*0.75
+        plt.text(0.75,y_text,"P=%.2f"%p)
 
         plt.savefig(outfilename)
         plt.clf()
