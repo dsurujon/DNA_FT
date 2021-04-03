@@ -5,15 +5,10 @@ from numpy.fft import *
 from pylab import *
 import wave
 import array
+from Bio import SeqIO
+import os
+import argparse
 
-filename="PEX3 genomic.txt"
-f=open(filename) 
-lines=f.readlines()
-f.close()
-pex3="".join(lines[1:])
-pex3=pex3.replace("\n","")
-#if the file has intergenic regions 1000bp upstream and 1000bp downstream 
-pex3=pex3[1000:-1000]
 def fourier_genome(seq):
     xA=[0 for i in range(0,len(seq))]
     xT=[0 for i in range(0,len(seq))]
@@ -30,23 +25,45 @@ def fourier_genome(seq):
     xhatG=abs(fft(xG))
     xhatT=abs(fft(xT))
     xhatC=abs(fft(xC))
-    xhat=[(xhatA[i]**2+xhatT[i]**2+xhatC[i]**2+xhatG[i]**2)*2/len(seq) for i in range(len(xhatA)/2,len(xhatA))]
-    return xhat,[float(i)/len(xhat) for i in range(0,len(xhat))]
+
+    l = int(len(xhatA))
+    xhat=[(xhatA[i]**2+xhatT[i]**2+xhatC[i]**2+xhatG[i]**2)*2/len(seq) for i in range(int(l/2),l)]
+    return(xhat,[float(i)/len(xhat) for i in range(0,len(xhat))])
+
+
 def P(spectrum):
     x=len(spectrum)
-    k=min(x/3,50)
-    peak=max(spectrum[(x/3)-k:(x/3)+k])
+    k=int(min(x/3,50))
+    peak=max(spectrum[int(x/3)-k:int(x/3)+k])
     p=x*peak/sum(spectrum)
-    return p
+    return(p)
 
-ff_p, freq_p=fourier_genome(pex3)
-p=P(ff_p)
 
-plt.figure(1)
-plt.plot(freq_p,ff_p)
-plt.title("Fourier Transform of the pex3 locus")
-plt.xlabel("frequency")
-plt.ylabel("S")
-plt.text(0.75,15,"P=%.2f"%p)
+def main(inputfile, outputdir):
+    records = list(SeqIO.parse(inputfile, "fasta"))
+    for record in records: 
+        outfigurename = record.id+'.png'
+        outfilename = os.path.join(outputdir, outfigurename)
 
-show()
+        plt.gcf()
+        ff_p, freq_p=fourier_genome(str(record.seq))
+        p=P(ff_p)
+
+        plt.figure(1)
+        plt.plot(freq_p,ff_p)
+        plt.title("Fourier Transform of %s" % record.id)
+        plt.xlabel("frequency")
+        plt.ylabel("S")
+        plt.text(0.75,15,"P=%.2f"%p)
+
+        plt.savefig(outfilename)
+        plt.clf()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input', required=True, help='input fasta file')
+    parser.add_argument('-o', '--outputdir', required=True, help='Output directory')
+    args = parser.parse_args()
+
+    main(args.input, args.outputdir)
